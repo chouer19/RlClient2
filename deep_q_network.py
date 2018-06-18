@@ -38,6 +38,8 @@ import numpy as np
 import threading
 from utils import proPrint
 from collections import deque
+sys.path.append('controller/')
+from controller import *
 
 GAME = 'angry-car' # the name of the game being played for log files
 #ACTIONS = 2 # number of valid actions
@@ -131,7 +133,7 @@ def send_control(game):
         game.send_control()
         #time.sleep(0.02)
 
-def trainNetwork(s, readout, h_fc1, sess, args):
+def trainNetwork(s, readout, h_fc1, sess, args, con):
     with make_carla_client(args.host, args.port) as client:
         game = simulator.CarlaGame(client, args)
 
@@ -143,6 +145,8 @@ def trainNetwork(s, readout, h_fc1, sess, args):
         train_step = tf.train.AdamOptimizer(1e-6).minimize(cost)
 
         game.initialize_game()
+        con.state = game.state
+        #con.state = game.get_state()
         #tSend = threading.Thread(target=send_control, args = (game,))
         #tSend.setDaemon(True)
         #tSend.start()
@@ -375,9 +379,10 @@ def trainNetwork(s, readout, h_fc1, sess, args):
 
 
 def playGame(args):
+    contr = Controller()
     sess = tf.InteractiveSession()
     s, readout, h_fc1 = createNetwork()
-    trainNetwork(s, readout, h_fc1, sess,args)
+    trainNetwork(s, readout, h_fc1, sess,args,contr)
 
 
 def main():
